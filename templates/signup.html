@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Signup{% endblock %}
+{% block content %}
+<section class="auth-card">
+    <h2>Signup</h2>
+    <form method="post">
+        <label>Username</label>
+        <input type="text" name="username" required>
+        <label>Email</label>
+        <input type="email" name="email" required>
+        <label>Password</label>
+        <input type="password" name="password" required minlength="8">
+        <button class="btn primary" type="submit">Create Account</button>
+    </form>
+</section>
+{% endblock %}
