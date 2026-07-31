@@ -1,3 +1,4 @@
+<img width="1920" height="1792" alt="Ai-Chatbot" src="https://github.com/user-attachments/assets/bdcee5f4-e26c-40f9-8772-7182d32c38fc" />
 # AI Chatbot Web Application
 
 Flask-based chatbot application with:
