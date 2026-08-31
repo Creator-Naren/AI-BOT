@@ -29,6 +29,7 @@ def _ensure_conversation():
 def chat():
     payload = request.get_json(silent=True) or {}
     message_text = (payload.get("message") or "").strip()
+    conversation_id = payload.get("conversation_id")
     if not message_text:
         return (
             jsonify(
@@ -41,7 +42,15 @@ def chat():
             400,
         )
 
-    conversation = _ensure_conversation()
+    if conversation_id:
+        conversation = Conversation.query.filter_by(
+            id=conversation_id, user_id=current_user.id
+        ).first()
+        if not conversation:
+            conversation = _ensure_conversation()
+    else:
+        conversation = _ensure_conversation()
+
     db.session.add(
         Message(conversation_id=conversation.id, role="user", content=message_text)
     )
@@ -88,6 +97,62 @@ def history():
                     "updated_at": item.updated_at.isoformat(),
                 }
                 for item in conversations
+            ],
+        }
+    )
+
+
+@api_bp.post("/conversations/new")
+@login_required
+def new_conversation():
+    conversation = Conversation(user_id=current_user.id, title="New Chat")
+    db.session.add(conversation)
+    db.session.commit()
+    return jsonify(
+        {
+            "success": True,
+            "conversation_id": conversation.id,
+            "title": conversation.title,
+        }
+    )
+
+
+@api_bp.get("/conversations/<int:conversation_id>/messages")
+@login_required
+def get_conversation_messages(conversation_id):
+    conversation = Conversation.query.filter_by(
+        id=conversation_id, user_id=current_user.id
+    ).first()
+    if not conversation:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "code": "not_found",
+                    "message": "Conversation not found.",
+                }
+            ),
+            404,
+        )
+
+    messages = (
+        Message.query.filter_by(conversation_id=conversation.id)
+        .order_by(Message.created_at.asc())
+        .all()
+    )
+    return jsonify(
+        {
+            "success": True,
+            "conversation_id": conversation.id,
+            "title": conversation.title,
+            "messages": [
+                {
+                    "id": msg.id,
+                    "role": msg.role,
+                    "content": msg.content,
+                    "created_at": msg.created_at.isoformat(),
+                }
+                for msg in messages
             ],
         }
     )
